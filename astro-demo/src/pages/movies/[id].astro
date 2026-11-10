@@ -1,0 +1,43 @@
+---
+import Layout from '../../components/Layout.astro'
+import TrailerPlayer from '../../components/TrailerPlayer.vue'
+import { getAllMovies, formatDate } from '../../lib/movies.js'
+
+// SSG con rutas dinámicas: Astro genera una página por película en el build.
+export async function getStaticPaths() {
+  const { source, movies } = await getAllMovies()
+  return movies.map(movie => ({ params: { id: String(movie.id) }, props: { movie, source } }))
+}
+
+const { movie, source } = Astro.props
+const n = Number(movie.box_office)
+const boxOffice = n ? `${Math.round(n / 1e6).toLocaleString('es-ES')} M$` : '—'
+---
+<Layout title={movie.title} source={source}>
+  <a slot="top" href="/" class="back">← Todas las películas</a>
+
+  <!-- Todo esto es HTML estático: cero JS -->
+  <article class="detail">
+    {movie.cover_url && <img src={movie.cover_url} alt={`Cartel de ${movie.title}`} width="340" height="510" fetchpriority="high" />}
+    <div>
+      <h1>{movie.title}</h1>
+      <dl class="facts">
+        <dt>Estreno</dt><dd>{formatDate(movie.release_date)}</dd>
+        <dt>Dirección</dt><dd>{movie.directed_by ?? '—'}</dd>
+        <dt>Duración</dt><dd>{movie.duration ? `${movie.duration} min` : '—'}</dd>
+        <dt>Fase</dt><dd>{movie.phase ?? '—'} {movie.saga && `(${movie.saga})`}</dd>
+        <dt>Taquilla</dt><dd>{boxOffice}</dd>
+      </dl>
+      <p class="overview">{movie.overview ?? 'Sin sinopsis.'}</p>
+    </div>
+  </article>
+
+  <!--
+    ISLA con client:visible: ni Vue ni el componente se descargan
+    hasta que el tráiler entra en pantalla. Esta página no carga JS al abrirla.
+  -->
+  <div class="below-fold">
+    <p class="hint">↓ Haz scroll con la pestaña Network abierta</p>
+    <TrailerPlayer client:visible url={movie.trailer_url} title={movie.title} />
+  </div>
+</Layout>

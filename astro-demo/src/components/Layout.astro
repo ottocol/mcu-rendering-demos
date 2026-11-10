@@ -1,0 +1,33 @@
+---
+import '../styles/main.css'
+import { SOURCES } from '../lib/movies.js'
+
+const { title, source } = Astro.props
+// Se ejecuta en el build: es la hora a la que se generó este HTML.
+const builtAt = new Date().toLocaleString('es-ES', {
+  timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'medium',
+})
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="mode-header">
+      <a href="/" class="brand">MCU · <span>versión Astro</span></a>
+      <span class="mode-label">Islas</span>
+    </header>
+    <main class="container">
+      <slot name="top" />
+      <aside class="render-info">
+        <span>HTML generado en <strong>el build</strong> el <strong>{builtAt}</strong></span>
+        <span>Solo llevan JS las islas</span>
+        {source && <span class="source">Datos: {SOURCES[source] ?? source}</span>}
+      </aside>
+      <slot />
+    </main>
+  </body>
+</html>
