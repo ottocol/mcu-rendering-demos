@@ -105,8 +105,19 @@ h2 { font-size: 1.25rem; margin: 1.6em 0 .6em; }
 .overview { max-width: 65ch; }
 @media (max-width: 640px) { .detail { grid-template-columns: 1fr; } .detail img { max-width: 260px; } }
 
-/* Contenido "below the fold" para que el tráiler empiece fuera de la vista */
-.below-fold { margin-top: 110vh; }
+/* Hueco a propósito para que el tráiler empiece fuera de la vista inicial.
+   El aviso se queda pegado al borde inferior mientras se baja (position: sticky)
+   y termina justo encima del tráiler. Va dentro del mismo contenedor que la ficha
+   para que pueda verse desde el principio. Solo CSS: no añade JavaScript. */
+.scroll-area { display: flex; flex-direction: column; }
+.scroll-gap { height: 110vh; }
+.scroll-cue {
+  position: sticky; bottom: 16px;
+  align-self: center; margin: 0 0 24px; padding: 10px 18px;
+  border-radius: 999px; background: var(--surface-2); color: var(--text);
+  font-size: .9rem; text-align: center;
+  box-shadow: 0 4px 16px rgb(0 0 0 / .45);
+}
 .hint { color: var(--muted); font-size: .9rem; }
 .trailer iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: var(--radius); }
 .play {

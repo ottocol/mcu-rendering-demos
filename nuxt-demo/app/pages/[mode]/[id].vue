@@ -33,7 +33,14 @@ const boxOffice = computed(() => {
 
     <p v-if="error" class="error">No existe esa película.</p>
 
-    <article v-else-if="movie" class="detail">
+    <!--
+      Hidratación perezosa: el JS de LazyTrailerPlayer no se descarga hasta que
+      entra en pantalla. Por eso hay un hueco vacío a propósito antes del tráiler,
+      para que empiece fuera de la vista inicial. Mientras tanto, un aviso se
+      queda pegado al borde inferior (solo CSS, ver .scroll-cue en main.css).
+    -->
+    <div v-else-if="movie" class="scroll-area">
+    <article class="detail">
       <!-- El cartel suele ser el elemento del LCP de esta página -->
       <img v-if="movie.cover_url" :src="movie.cover_url" :alt="`Cartel de ${movie.title}`" width="340" height="510" fetchpriority="high">
       <div>
@@ -48,14 +55,13 @@ const boxOffice = computed(() => {
         <p class="overview">{{ movie.overview ?? 'Sin sinopsis.' }}</p>
       </div>
     </article>
-
-    <!--
-      Hidratación perezosa: el JS de este componente no se descarga
-      hasta que entra en pantalla. Está al final, fuera de la vista inicial.
-    -->
-    <div v-if="movie" class="below-fold">
-      <p class="hint">↓ Haz scroll con la pestaña Network abierta</p>
-      <LazyTrailerPlayer hydrate-on-visible :url="movie.trailer_url" :title="movie.title" />
+      <div class="scroll-gap" />
+      <p class="scroll-cue">
+        ↓ Sigue bajando: el tráiler está al final de la página.<br>
+        Su JavaScript no se descarga hasta que aparece en pantalla (mira la pestaña Network).
+      </p>
     </div>
+
+    <LazyTrailerPlayer v-if="movie" hydrate-on-visible :url="movie.trailer_url" :title="movie.title" />
   </main>
 </template>
