@@ -11,6 +11,9 @@ const props = defineProps({
   linkBase: { type: String, required: true },
   // 'a' (navegación MPA, recarga la página) o NuxtLink (navegación SPA)
   linkComponent: { type: [String, Object], default: 'a' },
+  // Solo para la «MPA moderna» de Astro: da a cada cartel un
+  // view-transition-name único, el mismo que lleva en la página de detalle
+  vtNames: { type: Boolean, default: false },
 })
 
 const query = ref('')
@@ -58,6 +61,7 @@ function formatDate(iso) {
             :src="m.cover_url"
             :alt="`Cartel de ${m.title}`"
             :loading="i < 6 ? 'eager' : 'lazy'"
+            :style="vtNames ? { viewTransitionName: `poster-${m.id}` } : undefined"
             width="200"
             height="300"
           >

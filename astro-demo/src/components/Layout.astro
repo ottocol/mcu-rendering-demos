@@ -2,10 +2,34 @@
 import '../styles/main.css'
 import { SOURCES } from '../lib/movies.js'
 
-const { title, source } = Astro.props
+// modern = true → versión «MPA moderna» (/vt/...): View Transitions entre
+// documentos + Speculation Rules. Sin una línea de JavaScript propio.
+const { title, source, modern = false } = Astro.props
+
 // Se ejecuta en el build: es la hora a la que se generó este HTML.
 const builtAt = new Date().toLocaleString('es-ES', {
   timeZone: 'Europe/Madrid', dateStyle: 'short', timeStyle: 'medium',
+})
+
+// La misma página en la otra versión, para poder alternar
+const rest = Astro.url.pathname.replace(/^\/vt(?=\/|$)/, '')
+const classicHref = rest || '/'
+const modernHref = '/vt' + (rest || '/')
+
+// 1. View Transitions entre documentos: al navegar entre dos páginas que
+//    lo activan, el navegador anima el cambio en vez de mostrar un destello.
+//    Los elementos con el mismo view-transition-name en las dos páginas
+//    (la cabecera, el cartel de la película) se animan de una posición a otra.
+const viewTransitionsCss = `
+  @view-transition { navigation: auto; }
+  .mode-header { view-transition-name: cabecera; }
+`
+
+// 2. Speculation Rules: al pasar el ratón ~200 ms por un enlace a /vt/...,
+//    Chrome prerenderiza la página de destino en segundo plano.
+//    El clic posterior es instantáneo. Los navegadores que no lo soportan lo ignoran.
+const speculationRules = JSON.stringify({
+  prerender: [{ where: { href_matches: '/vt/*' }, eagerness: 'moderate' }],
 })
 ---
 <!doctype html>
@@ -14,17 +38,23 @@ const builtAt = new Date().toLocaleString('es-ES', {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
+    {modern && <style is:inline set:html={viewTransitionsCss}></style>}
+    {modern && <script type="speculationrules" is:inline set:html={speculationRules}></script>}
   </head>
   <body>
     <header class="mode-header">
-      <a href="/" class="brand">MCU · <span>versión Astro</span></a>
-      <span class="mode-label">Islas</span>
+      <a href={modern ? '/vt/' : '/'} class="brand">MCU · <span>versión Astro</span></a>
+      <nav aria-label="Versión de la MPA">
+        <a href={classicHref} class:list={[{ current: !modern }]}>MPA clásica</a>
+        <a href={modernHref} class:list={[{ current: modern }]}>MPA moderna</a>
+      </nav>
     </header>
     <main class="container">
       <slot name="top" />
       <aside class="render-info">
         <span>HTML generado en <strong>el build</strong> el <strong>{builtAt}</strong></span>
         <span>Solo llevan JS las islas</span>
+        {modern && <span>View Transitions + Speculation Rules</span>}
         {source && <span class="source">Datos: {SOURCES[source] ?? source}</span>}
       </aside>
       <slot />

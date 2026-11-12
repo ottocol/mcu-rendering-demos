@@ -1,0 +1,12 @@
+---
+import DetailPage from '../../../components/DetailPage.astro'
+import { getAllMovies } from '../../../lib/movies.js'
+
+export async function getStaticPaths() {
+  const { source, movies } = await getAllMovies()
+  return movies.map(movie => ({ params: { id: String(movie.id) }, props: { movie, source } }))
+}
+
+const { movie, source } = Astro.props
+---
+<DetailPage movie={movie} source={source} modern />

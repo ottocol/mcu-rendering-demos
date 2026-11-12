@@ -1,0 +1,34 @@
+---
+// Listado de películas. Lo usan / (MPA clásica) y /vt/ (MPA moderna).
+import Layout from './Layout.astro'
+import MovieFilterList from './MovieFilterList.vue'
+import { getMovieList, formatDate } from '../lib/movies.js'
+
+const { modern = false } = Astro.props
+const base = modern ? '/vt' : ''
+const { source, released, upcoming } = await getMovieList()
+---
+<Layout title="Películas del MCU · Astro" source={source} modern={modern}>
+  <h1 slot="top">Películas del MCU</h1>
+
+  <!--
+    ISLA: el filtro necesita JS... y como filtra la lista, la lista tiene
+    que estar DENTRO de la isla. Resultado: aquí la isla es casi toda la página.
+    Sin linkComponent, los enlaces son <a> normales: navegación MPA.
+    vtNames da a cada cartel un view-transition-name único (poster-<id>),
+    el mismo que lleva el cartel en la página de detalle.
+  -->
+  <MovieFilterList client:load movies={released} linkBase={`${base}/movies`} vtNames={modern} />
+
+  <!-- Esto es HTML estático: cero JS -->
+  {upcoming.length > 0 && (
+    <section class="upcoming">
+      <h2>Próximamente</h2>
+      <ul>
+        {upcoming.map(m => (
+          <li><a href={`${base}/movies/${m.id}`}>{m.title}</a><span class="meta">{formatDate(m.release_date)}</span></li>
+        ))}
+      </ul>
+    </section>
+  )}
+</Layout>

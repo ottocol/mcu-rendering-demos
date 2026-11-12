@@ -1,0 +1,45 @@
+---
+// Detalle de una película. Lo usan /movies/[id] (MPA clásica) y /vt/movies/[id] (MPA moderna).
+import Layout from './Layout.astro'
+import TrailerPlayer from './TrailerPlayer.vue'
+import { formatDate } from '../lib/movies.js'
+
+const { movie, source, modern = false } = Astro.props
+const n = Number(movie.box_office)
+const boxOffice = n ? `${Math.round(n / 1e6).toLocaleString('es-ES')} M$` : '—'
+// Mismo nombre que el cartel del listado: el navegador lo anima de una página a otra
+const posterStyle = modern ? `view-transition-name: poster-${movie.id}` : undefined
+---
+<Layout title={movie.title} source={source} modern={modern}>
+  <a slot="top" href={modern ? '/vt/' : '/'} class="back">← Todas las películas</a>
+
+  <!-- Todo esto es HTML estático: cero JS -->
+  <div class="scroll-area">
+  <article class="detail">
+    {movie.cover_url && <img src={movie.cover_url} alt={`Cartel de ${movie.title}`} width="340" height="510" fetchpriority="high" style={posterStyle} />}
+    <div>
+      <h1>{movie.title}</h1>
+      <dl class="facts">
+        <dt>Estreno</dt><dd>{formatDate(movie.release_date)}</dd>
+        <dt>Dirección</dt><dd>{movie.directed_by ?? '—'}</dd>
+        <dt>Duración</dt><dd>{movie.duration ? `${movie.duration} min` : '—'}</dd>
+        <dt>Fase</dt><dd>{movie.phase ?? '—'} {movie.saga && `(${movie.saga})`}</dd>
+        <dt>Taquilla</dt><dd>{boxOffice}</dd>
+      </dl>
+      <p class="overview">{movie.overview ?? 'Sin sinopsis.'}</p>
+    </div>
+  </article>
+    <!-- Hueco vacío a propósito: así el tráiler empieza fuera de la vista inicial -->
+    <div class="scroll-gap"></div>
+    <p class="scroll-cue">
+      ↓ Sigue bajando: el tráiler está al final de la página.<br>
+      Su JavaScript no se descarga hasta que aparece en pantalla (mira la pestaña Network).
+    </p>
+  </div>
+
+  <!--
+    ISLA con client:visible: ni Vue ni el componente se descargan
+    hasta que el tráiler entra en pantalla. Esta página no carga JS al abrirla.
+  -->
+  <TrailerPlayer client:visible url={movie.trailer_url} title={movie.title} />
+</Layout>

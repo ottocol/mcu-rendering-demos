@@ -5,7 +5,7 @@ Dos demos para entender cómo se reparten el trabajo de generar el HTML el servi
 | Carpeta | Qué enseña |
 | --- | --- |
 | [`nuxt-demo/`](nuxt-demo) | La **misma app** servida con CSR, SSR, SSG y SWR a la vez, cada una bajo un prefijo de ruta. También hidratación, payload, hydration mismatch e hidratación perezosa. |
-| [`astro-demo/`](astro-demo) | Las mismas páginas en Astro, con **los mismos componentes `.vue`** usados como islas. Sirve para comparar cuánto JavaScript descarga cada enfoque y la navegación MPA frente a SPA. |
+| [`astro-demo/`](astro-demo) | Las mismas páginas en Astro, con **los mismos componentes `.vue`** usados como islas. Sirve para comparar cuánto JavaScript descarga cada enfoque y la navegación MPA frente a SPA, y para ver una MPA «moderna» con View Transitions y Speculation Rules. |
 
 La app es sencilla a propósito: un listado de películas con filtro, una página de detalle y una sección de próximos estrenos. Lo interesante no es lo que hace, sino cómo se genera.
 
@@ -113,7 +113,9 @@ En DevTools, ralentiza la CPU (Performance → **CPU: 6x slowdown**) y la red (N
 - Junto al filtro pone **«Sin hidratar: el filtro aún no responde»**. Escribe algo: no filtra. Incluso puede que lo escrito se borre al hidratar.
 - Cuando cambia a **«Filtro activo»**, ya funciona.
 
-Repite en `/csr`: ni siquiera hay caja de texto hasta que llega el JavaScript. Ese rato en que la página parece lista pero no responde es lo que penaliza la métrica INP.
+Repite en `/csr`: ni siquiera hay caja de texto hasta que llega el JavaScript.
+
+¿Y las métricas? INP mide cuánto tarda la página en responder a cada interacción. Si interactúas mientras se está hidratando, tu evento espera a que el hilo principal quede libre, y eso empeora el INP. Pero si pulsas algo que todavía no tiene su manejador conectado, simplemente no pasa nada, y ninguna métrica lo recoge bien. En una prueba de laboratorio (Lighthouse), lo más parecido es TBT (*Total Blocking Time*): cuánto tiempo bloquea el hilo principal la carga, hidratación incluida.
 
 ### Hydration mismatch
 
@@ -151,6 +153,24 @@ Arranca `astro-demo` (`localhost:4321`). Usa los mismos componentes `MovieFilter
 - En Astro, la página de detalle **no carga nada de JavaScript** hasta que el tráiler entra en pantalla (`client:visible`). Solo entonces llegan Vue y el componente.
 - **En el listado la diferencia es menor.** El filtro tiene que controlar la lista, así que la lista va dentro de la isla y la isla acaba siendo casi toda la página. Las islas funcionan mejor cuando la interactividad está localizada en partes pequeñas.
 - **Navegación.** Al pinchar una película en Astro se carga una página HTML completa (MPA). En Nuxt se descarga un payload JSON y la página se renderiza en el cliente (SPA).
+
+### Las MPA vuelven
+
+La demo de Astro tiene dos versiones de las mismas páginas, que se alternan con los botones de la cabecera:
+
+- **MPA clásica** (`/`): cada clic carga un documento HTML nuevo, con su destello en blanco.
+- **MPA moderna** (`/vt/`): lo mismo, más dos funciones del navegador que se activan sin escribir JavaScript (están en `src/components/Layout.astro`):
+  1. **View Transitions entre documentos.** Con `@view-transition { navigation: auto; }` en el CSS de las dos páginas, el navegador anima el cambio. Los elementos que tienen el mismo `view-transition-name` en las dos páginas se animan de una posición a otra: aquí, la cabecera y el cartel de la película (`poster-<id>`).
+  2. **Speculation Rules.** Un `<script type="speculationrules">` le pide al navegador que **prerenderice** la página de destino cuando pasas el ratón unos 200 ms por un enlace (`"eagerness": "moderate"`). El clic posterior es instantáneo.
+
+Pruébalo en Chrome:
+
+1. En la MPA clásica, pincha una película: recarga completa.
+2. Cambia a la MPA moderna y haz lo mismo: el cartel «vuela» de la rejilla al detalle y no hay destello.
+3. Con Network abierto, pasa el ratón por una película sin pinchar: aparece la petición del documento **antes** del clic. En *Application → Speculative loads* ves qué páginas se han prerenderizado y por qué.
+4. Fíjate en que la página de detalle sigue cargando **0 KB de JavaScript**: sensación de SPA sin SPA.
+
+En Firefox funciona igual, pero sin animación ni prerender: es una mejora progresiva. Las View Transitions entre documentos funcionan en Chrome, Edge y Safari; las Speculation Rules, solo en navegadores basados en Chromium. Si el prerender no aparece, revisa que Chrome tenga activado *Configuración → Rendimiento → Precargar páginas* y que no esté en modo de ahorro de energía o de datos.
 
 ## Comprueba que lo has entendido
 

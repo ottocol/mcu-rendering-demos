@@ -1,29 +1,5 @@
 ---
-import Layout from '../components/Layout.astro'
-import MovieFilterList from '../components/MovieFilterList.vue'
-import { getMovieList, formatDate } from '../lib/movies.js'
-
-const { source, released, upcoming } = await getMovieList()
+// MPA clásica: cada clic carga una página HTML nueva, con su destello en blanco.
+import ListPage from '../components/ListPage.astro'
 ---
-<Layout title="Películas del MCU · Astro" source={source}>
-  <h1 slot="top">Películas del MCU</h1>
-
-  <!--
-    ISLA: el filtro necesita JS... y como filtra la lista, la lista tiene
-    que estar DENTRO de la isla. Resultado: aquí la isla es casi toda la página.
-    Sin linkComponent, los enlaces son <a> normales: navegación MPA.
-  -->
-  <MovieFilterList client:load movies={released} linkBase="/movies" />
-
-  <!-- Esto es HTML estático: cero JS -->
-  {upcoming.length > 0 && (
-    <section class="upcoming">
-      <h2>Próximamente</h2>
-      <ul>
-        {upcoming.map(m => (
-          <li><a href={`/movies/${m.id}`}>{m.title}</a><span class="meta">{formatDate(m.release_date)}</span></li>
-        ))}
-      </ul>
-    </section>
-  )}
-</Layout>
+<ListPage />
