@@ -85,8 +85,17 @@ h2 { font-size: 1.25rem; margin: 1.6em 0 .6em; }
   transition: transform .15s ease;
 }
 .card:hover, .card:focus-visible { transform: translateY(-3px); }
-.card img, .no-cover { width: 100%; height: auto; aspect-ratio: 2 / 3; object-fit: cover; background: var(--surface-2); }
-.no-cover { display: grid; place-items: center; padding: 8px; text-align: center; color: var(--muted); }
+/* Carátulas: la imagen va como fondo de .cover-img, encima de una carátula de
+   sustitución con el título. Si la imagen no carga (servidor de imágenes caído,
+   sin red), se ve la de sustitución en vez de un icono roto.
+   Solo CSS: no añade JavaScript ni provoca hydration mismatch. */
+.cover {
+  position: relative; display: grid; place-items: center;
+  width: 100%; aspect-ratio: 2 / 3; overflow: hidden;
+  background: linear-gradient(160deg, #5a1f22, var(--surface-2) 75%);
+}
+.cover-title { padding: 12px; text-align: center; font-weight: 700; line-height: 1.2; color: var(--text); }
+.cover-img { position: absolute; inset: 0; background: center / cover no-repeat; }
 .card .title { padding: 8px 10px 0; font-weight: 600; line-height: 1.25; }
 .card .meta { padding: 0 10px 10px; }
 .meta { color: var(--muted); font-size: .85rem; }
@@ -98,12 +107,13 @@ h2 { font-size: 1.25rem; margin: 1.6em 0 .6em; }
 /* Detalle */
 .back { display: inline-block; margin-top: 16px; color: var(--muted); text-decoration: none; }
 .detail { display: grid; gap: 24px; grid-template-columns: minmax(0, 340px) 1fr; align-items: start; }
-.detail img { width: 100%; height: auto; border-radius: var(--radius); }
+.detail .cover { border-radius: var(--radius); }
+.detail .cover-title { font-size: 1.6rem; padding: 24px; }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; }
 .facts dt { color: var(--muted); }
 .facts dd { margin: 0; }
 .overview { max-width: 65ch; }
-@media (max-width: 640px) { .detail { grid-template-columns: 1fr; } .detail img { max-width: 260px; } }
+@media (max-width: 640px) { .detail { grid-template-columns: 1fr; } .detail .cover { max-width: 260px; } }
 
 /* Hueco a propósito para que el tráiler empiece fuera de la vista inicial.
    El aviso se queda pegado al borde inferior mientras se baja (position: sticky)

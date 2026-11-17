@@ -42,7 +42,16 @@ const boxOffice = computed(() => {
     <div v-else-if="movie" class="scroll-area">
     <article class="detail">
       <!-- El cartel suele ser el elemento del LCP de esta página -->
-      <img v-if="movie.cover_url" :src="movie.cover_url" :alt="`Cartel de ${movie.title}`" width="340" height="510" fetchpriority="high">
+      <div class="cover">
+        <span class="cover-title">{{ movie.title }}</span>
+        <div
+          v-if="movie.cover_url"
+          class="cover-img"
+          role="img"
+          :aria-label="`Cartel de ${movie.title}`"
+          :style="{ backgroundImage: `url('${movie.cover_url}')` }"
+        />
+      </div>
       <div>
         <h1>{{ movie.title }}</h1>
         <dl class="facts">

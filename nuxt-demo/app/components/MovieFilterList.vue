@@ -11,6 +11,9 @@ const props = defineProps({
   linkBase: { type: String, required: true },
   // 'a' (navegación MPA, recarga la página) o NuxtLink (navegación SPA)
   linkComponent: { type: [String, Object], default: 'a' },
+  // Solo para la «MPA moderna» de Astro: da a cada cartel un
+  // view-transition-name único, el mismo que lleva en la página de detalle
+  vtNames: { type: Boolean, default: false },
 })
 
 const query = ref('')
@@ -53,15 +56,20 @@ function formatDate(iso) {
     <ul class="grid">
       <li v-for="(m, i) in filtered" :key="m.id">
         <component :is="linkComponent" :href="`${linkBase}/${m.id}`" class="card">
-          <img
-            v-if="m.cover_url"
-            :src="m.cover_url"
-            :alt="`Cartel de ${m.title}`"
-            :loading="i < 6 ? 'eager' : 'lazy'"
-            width="200"
-            height="300"
-          >
-          <div v-else class="no-cover">{{ m.title }}</div>
+          <!--
+            Carátula: la imagen va como fondo, encima de una carátula de
+            sustitución con el título. Si no carga, se ve la de sustitución.
+          -->
+          <div class="cover" :style="vtNames ? { viewTransitionName: `poster-${m.id}` } : undefined">
+            <span class="cover-title">{{ m.title }}</span>
+            <div
+              v-if="m.cover_url"
+              class="cover-img"
+              role="img"
+              :aria-label="`Cartel de ${m.title}`"
+              :style="{ backgroundImage: `url('${m.cover_url}')` }"
+            />
+          </div>
           <span class="title">{{ m.title }}</span>
           <span class="meta">{{ formatDate(m.release_date) }}<template v-if="m.phase"> · Fase {{ m.phase }}</template></span>
         </component>

@@ -16,7 +16,10 @@ const posterStyle = modern ? `view-transition-name: poster-${movie.id}` : undefi
   <!-- Todo esto es HTML estático: cero JS -->
   <div class="scroll-area">
   <article class="detail">
-    {movie.cover_url && <img src={movie.cover_url} alt={`Cartel de ${movie.title}`} width="340" height="510" fetchpriority="high" style={posterStyle} />}
+    <div class="cover" style={posterStyle}>
+      <span class="cover-title">{movie.title}</span>
+      {movie.cover_url && <div class="cover-img" role="img" aria-label={`Cartel de ${movie.title}`} style={`background-image: url('${movie.cover_url}')`}></div>}
+    </div>
     <div>
       <h1>{movie.title}</h1>
       <dl class="facts">
